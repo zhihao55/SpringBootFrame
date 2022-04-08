@@ -1,0 +1,79 @@
+server:
+  port: 8082
+  server:
+    tomcat: /tmp/tomcat
+spring:
+  datasource:
+    username: root
+    password: a123456
+    url: jdbc:mysql://localhost:3306/cms?useSSL=true&amp;useUnicode=true&amp;characterEncoding=utf-8
+    type: com.alibaba.druid.pool.DruidDataSource # 自定义数据源
+
+    #Spring Boot 默认是不注入这些属性值的，需要自己绑定
+    #druid 数据源专有配置
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    #配置监控统计拦截的filters，stat:监控统计、log4j：日志记录、wall：防御sql注入
+    #如果允许时报错  java.lang.ClassNotFoundException: org.apache.log4j.Priority
+    #则导入 log4j 依赖即可，Maven 地址：https://mvnrepository.com/artifact/log4j/log4j
+    filters: stat,wall,log4j
+    maxPoolPreparedStatementPerConnectionSize: 20
+    useGlobalDataSourceStat: true
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    password:
+    #邮箱配置
+  mail:
+    host: smtp.163.com
+    username: 13659711594@163.com
+    password: WBXSPIPFPWFMRAMQ
+    port: 25
+    default-encoding: UTF-8    #默认编码
+    protocol: smtp
+  thymeleaf:
+    prefix: classpath:/templates/
+
+  #activemq
+  activemq:
+    broker-url: tcp://127.0.0.1:61616
+    user: admin
+    password: admin
+    packages:
+      trust-all: true
+
+  #自定义错误
+  mvc:
+    throw-exception-if-no-handler-found: true
+  web:
+    resources:
+      add-mappings: false
+  jms:
+    pub-sub-domain: false
+
+
+#  jms:
+#    pub-sub-domain: true
+#邮件发件人
+mail:
+  fromMail:
+    addr: 13659711594@163.com
+
+
+# 热更新设置
+devtools:
+  livereload:
+    enabled: true
+    port: 9527
+  restart:
+    enabled: true
