@@ -60,7 +60,10 @@ public class RedisService {
 
     public String getUserBystringRedisTemplate(String Token) {
         ValueOperations ops = this.stringRedisTemplate.opsForValue();
-        System.out.println(ops.get(Token).toString());
+//        try {
+//
+//        }catch ()
+//        System.out.println(ops.get(Token).toString());
         return JSONObject.toJSON(ops.get(Token)).toString();
     }
 

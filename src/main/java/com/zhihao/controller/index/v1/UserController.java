@@ -1,12 +1,9 @@
 package com.zhihao.controller.index.v1;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.zhihao.pojo.Result;
-import com.zhihao.pojo.user.Book;
 import com.zhihao.pojo.user.User;
 import com.zhihao.service.RedisService;
-import com.zhihao.service.email.MailService;
 import com.zhihao.service.user.UserService;
 import com.zhihao.util.ReturnResultUtils;
 import org.apache.activemq.command.ActiveMQQueue;
@@ -17,15 +14,13 @@ import javax.validation.Valid;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+
 import org.springframework.jms.core.JmsMessagingTemplate;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpSession;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/user")
@@ -81,7 +76,7 @@ public class UserController {
     )
     public Result register(@NotNull(message = "邮箱不能为空") @Email(message = "请输入正确的邮箱") String email, @NotNull(message = "验证码必填") String code, @NotNull(message = "密码必填") String password) {
         System.out.println(this.redisService.getKeyValue(email));
-        String codes = (String)this.redisService.getKeyValue(email);
+        String codes = (String) this.redisService.getKeyValue(email);
         System.out.println(code);
         if (null != codes && code.equals(codes)) {
             this.userService.register(email, password);
@@ -97,7 +92,7 @@ public class UserController {
     )
     public Result mail(@Valid @NotNull(message = "邮箱必填") @Email(message = "请输入正确的邮箱") String email) {
         //生成验证码
-        int code = (int)((Math.random() * 9.0D + 1.0D) * 100000.0D);
+        int code = (int) ((Math.random() * 9.0D + 1.0D) * 100000.0D);
         Queue queue = new ActiveMQQueue("email");
         User user = new User();
         user.setCode(code);
@@ -118,14 +113,26 @@ public class UserController {
         return "sss";
     }
 
-//    /**
-//     * 用户添加书本
-//     * @return
-//     */
-//    @PostMapping(value = "/addbook")
-//    public Result addBook(@Valid @RequestBody User user){
-//        userService.addBooks(user);
-////        System.out.println(user.getBook().getBookValue());
-//        return ReturnResultUtils.returnSuccess("");
-//    }
+    /**
+     * 获取全部好友
+     * @return
+     */
+    @GetMapping({"/findall"})
+    public Result findAll() {
+        List<User> user = userService.findAll();
+        HashMap<Object, Object> map = new HashMap();
+        map.put("user", user);
+        return ReturnResultUtils.returnSuccess(user);
+    }
+
+    /**
+     * 用户添加书本
+     * @return
+     */
+    @PostMapping(value = "/addbook")
+    public Result addBook(@Valid @RequestBody User user){
+        userService.addBooks(user);
+//        System.out.println(user.getBook().getBookValue());
+        return ReturnResultUtils.returnSuccess("");
+    }
 }

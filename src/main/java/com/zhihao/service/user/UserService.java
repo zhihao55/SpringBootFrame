@@ -11,6 +11,7 @@ import org.springframework.util.DigestUtils;
 
 import javax.validation.Valid;
 import java.util.HashMap;
+import java.util.List;
 
 @Service
 public class UserService {
@@ -46,15 +47,25 @@ public class UserService {
         }
     }
 
-//    /**
-//     * 用户添加书本
-//     * @param user
-//     * @return
-//     */
-//    public int addBooks(User user) {
-//        Book book =user.getBook();
-//        Integer number=userMapper.addBooks(book);
-//        return number;
-//    }
+    /**
+     * 用户添加书本
+     * @param user
+     * @return
+     */
+    public int addBooks(User user) {
+        Book book =user.getBook();
+        Integer number=userMapper.addBooks(book);
+        return number;
+    }
+
+    /**
+     * 获取全部好友，默认全部好友
+     * @return
+     */
+    public List<User> findAll(){
+        List<User> user= userMapper.queryUserList();
+        return user;
+    }
+
 
 }

@@ -21,11 +21,23 @@ public class JWTInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        String token = request.getHeader("x-token");
+//        String token = request.getHeader("x-token");
+        //Bearer auth认证
+        String token = request.getHeader("authorization");
+//        if (){
+//
+//        }
+        System.out.println(token);
         if (token == null) {
             throw new MyException(203, "没有权限访问", "");
         } else {
-
+//            String[] tokens = token.split(" ");
+//            if (!(tokens.length >= 2)) {
+//                System.out.println("当前没有传递auth没有token");
+//                throw new MyException(204, "没有权限访问", "");
+//            }
+//            System.out.println(tokens.length);
+//            token=tokens[1];
             if (TokenUtil.VerifyJWTToken(token)) {
                 String tokenInfo = redisService.getUserBystringRedisTemplate(token);
                 User user = (User) JSON.parseObject(tokenInfo, User.class);

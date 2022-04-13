@@ -3,7 +3,10 @@ package com.zhihao.service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.zhihao.pojo.Result;
+import com.zhihao.pojo.user.LoginUser;
 import com.zhihao.pojo.user.User;
+import com.zhihao.util.ReturnResultUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -28,7 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @version:1.0
  */
 @ServerEndpoint("/test")
-@Component
+@Component //关键点@Component(@Controller、@Service、@Repository)通常是通过类路径扫描来自动侦测以及自动装配到Spring容器中
 @Slf4j
 public class MyWebsocketServer {
 
@@ -60,25 +63,34 @@ public class MyWebsocketServer {
 
 
     @OnOpen
-    public void onOpen(Session session, @PathParam("token") String token) throws IOException {
+    public void onOpen(Session session) throws IOException {
 //        检验token
+//        System.out.println(session.getParameter("token"));
+
         Map<String, List<String>> parameterMap = session.getRequestParameterMap();
+//        System.out.println(session.getPathParameters().get("token"));
         //获取url传递过来的token
         String token1 = parameterMap.get("token").get(0);
-        String tokens = redisService.getUserBystringRedisTemplate(token1);
-        System.out.println(tokens);
-        User user = (User) JSON.parseObject(tokens, User.class);
-        System.out.println(user);
-        //----------------------------------------
+        System.out.println(token1);
+        try {
+            String tokens = redisService.getUserBystringRedisTemplate(token1);
+            System.out.println(tokens);
+            User user = (User) JSON.parseObject(tokens, User.class);
+            System.out.println(user);
+            //----------------------------------------
 
 //        this.session = session;
 //        this.id = String.valueOf(user.getId());//接收到发送消息的人员编号
-        log.info("有新的客户端连接了: {}", user.getId());
-        SessionSet.add(session);
-        clients.put(String.valueOf(user.getId()), session);
-        int cnt = OnlineCount.incrementAndGet(); // 在线数加1
-        log.info("有连接加入，当前连接数为：{}", cnt);
-        /*//        SendMessage(clients.get(String.valueOf(user.getId())), "连接成功");*/
+            log.info("有新的客户端连接了: {}", user.getId());
+            SessionSet.add(session);
+            clients.put(String.valueOf(user.getId()), session);
+            int cnt = OnlineCount.incrementAndGet(); // 在线数加1
+            log.info("有连接加入，当前连接数为：{}", cnt);
+            SendMessages(session, "连接成功", null);
+        } catch (NullPointerException e) {
+            System.out.println("连接失败");
+            onClose(session);
+        }
     }
 
     /**
@@ -113,7 +125,7 @@ public class MyWebsocketServer {
      * @param message 消息对象
      */
     @OnMessage
-    public void onMessage(String message,Session session) {
+    public void onMessage(String message, Session session) {
 //        //将字符串转为数组
 //        JSONObject ss = JSONObject.parseObject(message);
 //        System.out.println(ss.getString("user"));
@@ -121,7 +133,7 @@ public class MyWebsocketServer {
 //
 //        System.out.println(JSONObject.parseObject(message));
         log.info("服务端收到客户端发来的消息: {}", message);
-        SendMessages(session,message);
+        SendMessages(session, message, null);
 //        this.sendAll(message);
     }
 
@@ -131,9 +143,17 @@ public class MyWebsocketServer {
      * @param session
      * @param message
      */
-    public static void SendMessages(Session session, String message) {
+    public static void SendMessages(Session session, String message, Object userId) {
         try {
-            session.getBasicRemote().sendText(String.format("%s (From Server，Session ID=%s)", message, session.getId()));
+            HashMap<Object, Object> map = new HashMap();
+            map.put("message", message);
+            System.out.println(userId);
+            if (userId != null) {
+                map.put("fromId", userId);
+            }
+//            JSONObject.toJSON(ReturnResultUtils.returnSuccess(map));
+            String res = JSON.toJSONString(ReturnResultUtils.returnSuccess(map));
+            session.getBasicRemote().sendText(String.format(res, session.getId()));
         } catch (IOException e) {
             log.error("发送消息出错：{}", e.getMessage());
             e.printStackTrace();
@@ -148,7 +168,7 @@ public class MyWebsocketServer {
      * @param message
      * @throws IOException
      */
-    public static void SendMessage(String message, String sessionId, String userId) throws IOException {
+    public static void SendMessage(String message, String sessionId, Object userId) throws IOException {
         Session session = null;
 //        for (Session s : SessionSet) {
 //            if(s.getId().equals(sessionId)){
@@ -162,17 +182,16 @@ public class MyWebsocketServer {
 //        else{
 //            log.warn("没有找到你指定ID的会话：{}",sessionId);
 //        }
-
         if (clients.get(sessionId) != null) {
             session = clients.get(sessionId);
             if (!userId.equals(sessionId)) {
-                SendMessages(session, message);
+                SendMessages(session, message, userId);
             } else {
-                SendMessages(session, message);
+                SendMessages(session, message, userId);
             }
         } else {
             //如果用户不在线则返回不在线信息给自己
-           log.info("该用户不在线");
+            log.info("该用户不在线");
         }
 
     }

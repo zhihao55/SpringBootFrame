@@ -35,4 +35,6 @@ public class User implements Serializable {
     private String create_time;
     @JsonIgnore
     private Integer code;
+    @JsonIgnore
+    private Book book;
 }
